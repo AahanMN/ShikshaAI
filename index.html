@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f2f4ed">
+  <title>Shiksha AI | Teach through your voice</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" src="app.js"></script>
+</head>
+<body data-view="welcome">
+  <header class="topbar">
+    <a class="brand" href="#welcome" aria-label="Shiksha AI home" data-go="welcome">
+      <span class="brand-symbol" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span>shiksha<span class="brand-ai">.ai</span></span>
+    </a>
+    <p class="topbar-note">A voice-first teaching studio</p>
+    <button class="top-mic" id="header-mic" type="button">Turn mic on</button>
+  </header>
+
+  <main>
+    <section class="view welcome-view is-active" id="welcome-view" aria-labelledby="welcome-title">
+      <div class="welcome-layout">
+        <div class="welcome-copy">
+          <p class="eyebrow"><span class="eyebrow-line"></span> MADE FOR THE WAY YOU TEACH</p>
+          <h1 id="welcome-title">Your voice<br>is the <em>lesson.</em></h1>
+          <p class="welcome-description">Bring ideas to life in 3D and write on a voice-controlled board.</p>
+          <div class="welcome-actions">
+            <button class="button button-primary" id="get-started" type="button">Enter the studio <span aria-hidden="true">→</span></button>
+            <button class="button button-secondary" id="welcome-listen" type="button">Turn mic on <span class="mic-glyph" aria-hidden="true">◉</span></button>
+          </div>
+          <p class="voice-nudge" id="welcome-status" role="status" aria-live="polite">Turn the mic on once, then say “get started”.</p>
+          <aside class="creator-note" aria-label="About the creator">
+            <p class="creator-label">BUILT WITH AN ACCESSIBILITY MISSION</p>
+            <p>“I made Shiksha AI to support teachers with disabilities.”</p>
+            <span>Created by Aahan Mahajan · Age 13 · Grade 8 · IDRS</span>
+          </aside>
+          <div class="welcome-foot"><span>01</span><span>ACCESSIBLE BY DESIGN</span><span class="foot-rule"></span><span>BUILT FOR TEACHERS</span></div>
+        </div>
+
+        <div class="welcome-visual" aria-label="Interactive preview of a three-dimensional shape">
+          <div class="visual-label"><span>SHIKSHA AI / SHAPE STUDY</span><span>01 — 03</span></div>
+          <canvas id="welcome-canvas" aria-label="Slowly rotating 3D geometric shape"></canvas>
+          <div class="visual-note"><span>LESSON OBJECT</span><strong>Ideas you can turn around.</strong></div>
+          <span class="visual-orbit orbit-one" aria-hidden="true"></span>
+          <span class="visual-orbit orbit-two" aria-hidden="true"></span>
+        </div>
+      </div>
+
+      <div class="welcome-strip">
+        <p>MAKE IT VISIBLE</p>
+        <div class="shape-list"><span>Cube</span><span>Sphere</span><span>Pyramid</span><span>And more</span></div>
+        <p class="strip-aside">One spoken idea, ready to explore.</p>
+      </div>
+    </section>
+
+    <section class="view chooser-view" id="chooser-view" aria-labelledby="chooser-title" hidden>
+      <div class="chooser-heading">
+        <p class="eyebrow"><span class="eyebrow-line"></span> YOUR TEACHING SPACE</p>
+        <h1 id="chooser-title">Choose how to <em>teach.</em></h1>
+        <p>Pick a space to begin. You can use your voice in either one.</p>
+      </div>
+      <div class="mode-grid">
+        <button class="mode-card mode-card-3d" type="button" data-go="studio">
+          <span class="mode-number">01 / EXPLORE</span>
+          <span class="mode-icon mode-icon-shape" aria-hidden="true">⬡</span>
+          <strong>3D figures</strong>
+          <span class="mode-description">Create and explore shapes by speaking a command.</span>
+          <span class="mode-action">Open 3D studio <b aria-hidden="true">↗</b></span>
+        </button>
+        <button class="mode-card mode-card-writing" type="button" data-go="writing">
+          <span class="mode-number">02 / WRITE</span>
+          <span class="mode-icon mode-icon-writing" aria-hidden="true">Aa</span>
+          <strong>Writing space</strong>
+          <span class="mode-description">Dictate a lesson, scroll the board, and erase words by voice.</span>
+          <span class="mode-action">Open writing space <b aria-hidden="true">↗</b></span>
+        </button>
+      </div>
+      <div class="chooser-footer">
+        <button class="back-button" type="button" data-go="welcome">← Back to welcome</button>
+        <p>Try saying “3D figures” or “writing space”.</p>
+      </div>
+    </section>
+
+    <section class="view studio-view" id="studio-view" aria-labelledby="studio-title" hidden>
+      <div class="studio-heading">
+        <div>
+          <p class="eyebrow"><span class="eyebrow-line"></span> YOUR TEACHING SPACE</p>
+          <h1 id="studio-title">What shall we <em>make?</em></h1>
+        </div>
+        <p class="studio-subtitle">Say a shape and size. Your model will appear here.</p>
+      </div>
+
+      <div class="studio-layout">
+        <section class="model-stage" aria-label="3D model preview">
+          <div class="stage-meta"><span><i class="status-light"></i> LIVE MODEL</span><button id="reset-view" type="button">Reset view <span aria-hidden="true">↺</span></button></div>
+          <canvas id="shape-canvas" aria-label="Interactive 3D model. Drag to rotate and scroll to zoom."></canvas>
+          <div class="stage-caption"><strong id="shape-title">CUBE</strong><span id="shape-size-label">5 UNITS</span></div>
+          <p class="stage-help">DRAG TO ROTATE <span>·</span> SCROLL TO ZOOM</p>
+        </section>
+
+        <aside class="command-panel" aria-label="Shape controls">
+          <div class="panel-heading"><span>CREATE A MODEL</span><span>02 / 03</span></div>
+          <form id="shape-form">
+            <label for="command-input">Describe what to draw</label>
+            <div class="command-row">
+              <input id="command-input" type="text" placeholder="Try “draw a cube size 8”" autocomplete="off">
+              <button id="voice-button" class="listen-button" type="button" aria-label="Start voice command">Speak</button>
+            </div>
+            <p class="field-hint">Try “sphere radius 4”, “scroll up”, “scroll down”, “zoom in”, or “zoom out”.</p>
+
+            <div class="form-divider"><span>OR SET IT HERE</span></div>
+            <label for="shape-select">Shape</label>
+            <select id="shape-select" name="shape">
+              <option value="cube">Cube</option>
+              <option value="cuboid">Cuboid</option>
+              <option value="sphere">Sphere</option>
+              <option value="pyramid">Pyramid</option>
+              <option value="tetrahedron">Tetrahedron</option>
+              <option value="cone">Cone</option>
+              <option value="cylinder">Cylinder</option>
+              <option value="pentagonal_prism">Pentagonal prism</option>
+              <option value="hexagonal_prism">Hexagonal prism</option>
+              <option value="octagonal_prism">Octagonal prism</option>
+              <option value="torus">Torus</option>
+            </select>
+
+            <div class="size-header"><label for="size-range">Size</label><output id="size-output" for="size-range">5 units</output></div>
+            <div class="size-row">
+              <input id="size-range" type="range" min="1" max="20" step="0.5" value="5" aria-label="Model size">
+              <input id="size-number" type="number" min="0.1" max="1000" step="0.1" value="5" aria-label="Model size in units">
+            </div>
+            <button id="generate-button" class="button button-primary generate-button" type="submit">Create model <span aria-hidden="true">↗</span></button>
+            <p id="form-status" class="form-status" role="status" aria-live="polite">Ready when you are.</p>
+          </form>
+
+          <div class="panel-footer"><span>SHIKSHA AI</span><span><i class="status-light"></i> PRIVATE, LOCAL SESSION</span></div>
+        </aside>
+      </div>
+
+      <div class="studio-footer"><button class="back-button" type="button" data-go="chooser">← Choose another space</button><p>Say “draw a cube size 8”, “scroll up/down”, “zoom in/out”, or “go to writing space”.</p></div>
+    </section>
+
+    <section class="view writing-view" id="writing-view" aria-labelledby="writing-title" hidden>
+      <div class="studio-heading writing-heading">
+        <div>
+          <p class="eyebrow"><span class="eyebrow-line"></span> YOUR TEACHING SPACE</p>
+          <h1 id="writing-title">Writing <em>space.</em></h1>
+        </div>
+        <p class="studio-subtitle">Speak naturally. Your words appear on the board.</p>
+      </div>
+      <div class="writing-layout">
+        <section class="board-panel" aria-label="Voice-controlled writing board">
+          <div class="board-toolbar">
+            <span><i class="status-light"></i> CLASSROOM BOARD</span>
+            <div>
+              <div class="language-switch" role="group" aria-label="Writing language">
+                <button type="button" data-writing-language="en" aria-pressed="true">English</button>
+                <button type="button" data-writing-language="hi" aria-pressed="false">हिन्दी</button>
+              </div>
+              <button id="erase-word" type="button">Erase last word</button>
+              <button id="clear-board" type="button">Erase whole board</button>
+            </div>
+          </div>
+          <label class="sr-only" for="writing-board">Writing board</label>
+          <textarea id="writing-board" placeholder="Your lesson will appear here…&#10;&#10;Try saying, “This is an apple.”"></textarea>
+          <div class="board-footer">
+            <p id="writing-status" role="status" aria-live="polite">Ready to write. Turn on the mic and start speaking.</p>
+            <span id="writing-command-hint">Say: “Turn on Hindi mode” · “scroll up/down” · “erase” · “erase whole”</span>
+          </div>
+        </section>
+      </div>
+      <div class="studio-footer"><button class="back-button" type="button" data-go="chooser">← Choose another space</button><p>Say “erase” to remove the last word, or “erase whole” to clear the board.</p></div>
+    </section>
+  </main>
+
+  <footer class="page-footer"><span>SHIKSHA AI <b>·</b> TEACH THROUGH YOUR VOICE</span><span>DESIGNED FOR EVERY TEACHER</span></footer>
+</body>
+</html>
