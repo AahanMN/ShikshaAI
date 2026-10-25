@@ -286,6 +286,68 @@ function updateSize(value) {
   sizeOutput.value = `${size} units`;
 }
 
+const spokenNumberWords = {
+  zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5,
+  six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+  eleven: 11, twelve: 12, thirteen: 13, fourteen: 14,
+  fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18,
+  nineteen: 19, twenty: 20, thirty: 30, forty: 40,
+  fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90,
+  hundred: 100, thousand: 1000, million: 1000000,
+  billion: 1000000000, trillion: 1000000000000,
+};
+
+function inferShapeFromCommand(command) {
+  if (!command) return shapeSelect.value;
+  const normalized = command.toLowerCase();
+  const mapping = {
+    cube: /\b(cube|square)\b/,
+    cuboid: /\b(cuboid|box|rectangle)\b/,
+    sphere: /\b(sphere|ball|circle)\b/,
+    pyramid: /\b(pyramid|triangle)\b/,
+    tetrahedron: /\b(tetrahedron)\b/,
+    cone: /\b(cone)\b/,
+    cylinder: /\b(cylinder)\b/,
+    pentagonal_prism: /\b(pentagonal|pentagon)\b/,
+    hexagonal_prism: /\b(hexagonal|hexagon)\b/,
+    octagonal_prism: /\b(octagonal|octagon)\b/,
+    torus: /\b(torus|donut|doughnut)\b/,
+  };
+  const match = Object.entries(mapping).find(([, pattern]) => pattern.test(normalized));
+  return match ? match[0] : shapeSelect.value;
+}
+
+function inferSizeFromCommand(command) {
+  if (!command) return Number(sizeNumber.value);
+
+  const directMatch = command.match(/\d+(?:\.\d+)?/);
+  if (directMatch) return Number(directMatch[0]);
+
+  let total = 0;
+  let current = 0;
+  let found = false;
+  const words = command.toLowerCase().replace(/[^a-z\s-]/g, " ").split(/\s+/).filter(Boolean);
+
+  for (const word of words) {
+    if (word in spokenNumberWords) {
+      found = true;
+      const value = spokenNumberWords[word];
+      if (value === 100) {
+        current = (current || 1) * 100;
+      } else if (value >= 1000) {
+        total += (current || 1) * value;
+        current = 0;
+      } else {
+        current += value;
+      }
+    } else if (found && !["and", "-"].includes(word)) {
+      break;
+    }
+  }
+
+  return found ? total + current : Number(sizeNumber.value);
+}
+
 sizeRange.addEventListener("input", () => updateSize(sizeRange.value));
 sizeNumber.addEventListener("input", () => updateSize(sizeNumber.value));
 
@@ -308,6 +370,17 @@ async function submitShape(command = commandInput.value.trim()) {
     commandInput.value = "";
     announce(`${result.title} created. You can rotate it or ask for another shape.`);
   } catch (error) {
+    const fallbackShape = inferShapeFromCommand(command);
+    const fallbackSize = inferSizeFromCommand(command);
+    const localSize = Number(fallbackSize);
+    if (fallbackShape && Number.isFinite(localSize) && localSize > 0) {
+      shapeSelect.value = fallbackShape;
+      updateSize(localSize);
+      drawShape(fallbackShape, localSize);
+      commandInput.value = "";
+      announce(`Created a ${fallbackShape.replaceAll("_", " ")} at size ${localSize}. The local helper was unavailable.`);
+      return;
+    }
     announce(error.message || "The studio could not reach its Python backend.", true);
   } finally {
     generateButton.disabled = false;

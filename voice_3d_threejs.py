@@ -29,7 +29,8 @@ NUMBER_WORDS = {
     "fifteen": 15, "sixteen": 16, "seventeen": 17, "eighteen": 18,
     "nineteen": 19, "twenty": 20, "thirty": 30, "forty": 40,
     "fifty": 50, "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90,
-    "hundred": 100, "thousand": 1000,
+    "hundred": 100, "thousand": 1000, "million": 1_000_000,
+    "billion": 1_000_000_000, "trillion": 1_000_000_000_000,
 }
 
 # Words the number parser should step over rather than stop at, so phrases
@@ -73,8 +74,8 @@ def extract_length(text):
     if digit_match:
         return float(digit_match.group())
 
-    total = 0          # completed hundreds/thousands groups
-    current = 0        # group being accumulated
+    total = 0
+    current = 0
     found = False
 
     for word in re.findall(r"[a-z]+", text):
@@ -83,8 +84,8 @@ def extract_length(text):
             val = NUMBER_WORDS[word]
             if val == 100:
                 current = (current or 1) * 100
-            elif val == 1000:
-                total += (current or 1) * 1000
+            elif val >= 1000:
+                total += (current or 1) * val
                 current = 0
             else:
                 current += val
