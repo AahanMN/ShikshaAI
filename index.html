@@ -169,6 +169,7 @@
                 <button type="button" data-writing-language="en" aria-pressed="true">English</button>
                 <button type="button" data-writing-language="hi" aria-pressed="false">हिन्दी</button>
               </div>
+              <button id="math-mode-toggle" type="button" aria-pressed="false">Math mode: off</button>
               <button id="erase-word" type="button">Erase last word</button>
               <button id="clear-board" type="button">Erase whole board</button>
             </div>
@@ -177,11 +178,11 @@
           <textarea id="writing-board" placeholder="Your lesson will appear here…&#10;&#10;Try saying, “This is an apple.”"></textarea>
           <div class="board-footer">
             <p id="writing-status" role="status" aria-live="polite">Ready to write. Turn on the mic and start speaking.</p>
-            <span id="writing-command-hint">Say: “Turn on Hindi mode” · “scroll up/down” · “erase” · “erase whole”</span>
+            <span id="writing-command-hint">Say “turn math mode on”, then speak a calculation · “scroll up/down” · “erase” · “erase whole”</span>
           </div>
         </section>
       </div>
-      <div class="studio-footer"><button class="back-button" type="button" data-go="chooser">← Choose another space</button><p>Say “erase” to remove the last word, or “erase whole” to clear the board.</p></div>
+      <div class="studio-footer"><button class="back-button" type="button" data-go="chooser">← Choose another space</button><p>Say “turn math mode on” and speak a calculation, or say “turn math mode off” to dictate normally.</p></div>
     </section>
   </main>
 

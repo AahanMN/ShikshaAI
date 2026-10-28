@@ -12,6 +12,7 @@ let recognition;
 let voiceEnabled = false;
 let recognitionActive = false;
 let writingLanguage = "en";
+let mathMode = false;
 let activeShape = "cube";
 let activeSize = 5;
 
@@ -28,7 +29,7 @@ function setWritingLanguage(language) {
     placeholder: "आपका पाठ यहाँ दिखाई देगा…\n\nबोलकर देखें, “यह एक सेब है।”",
     ready: "लिखने के लिए तैयार। माइक चालू करें और बोलना शुरू करें।",
     commands: "आवाज़ से कहें: “ऊपर स्क्रॉल करो” · “नीचे स्क्रॉल करो” · “मिटाओ”",
-    voiceCommands: "बोलें: “ऊपर स्क्रॉल करो” · “नीचे स्क्रॉल करो” · “मिटाओ” · “पूरा बोर्ड मिटाओ”",
+    voiceCommands: "बोलें: “maths mode on” · “ऊपर/नीचे स्क्रॉल करो” · “मिटाओ” · “पूरा बोर्ड मिटाओ”",
   } : {
     heading: "Writing space.",
     subtitle: "Speak naturally. Your words appear on the board.",
@@ -38,7 +39,7 @@ function setWritingLanguage(language) {
     placeholder: "Your lesson will appear here…\n\nTry saying, “This is an apple.”",
     ready: "Ready to write. Turn on the mic and start speaking.",
     commands: "VOICE: “SCROLL UP” · “SCROLL DOWN” · “ERASE” · “ERASE WHOLE”",
-    voiceCommands: "Say: “Turn on Hindi mode” · “scroll up/down” · “erase” · “erase whole”",
+    voiceCommands: "Say “turn math mode on” · “scroll up/down” · “erase” · “erase whole”",
   };
   document.documentElement.lang = hindi ? "hi" : "en";
   document.querySelector("#writing-title").innerHTML = `${copy.heading.split(" ")[0]} <em>${copy.heading.split(" ").slice(1).join(" ")}</em>`;
@@ -441,6 +442,145 @@ function appendWriting(text) {
     : `Added: “${addition}”`;
 }
 
+function setMathMode(enabled) {
+  mathMode = enabled;
+  const button = document.querySelector("#math-mode-toggle");
+  button.textContent = `Math mode: ${enabled ? "on" : "off"}`;
+  button.setAttribute("aria-pressed", String(enabled));
+  document.querySelector("#writing-status").textContent = enabled
+    ? "Math mode is on. Speak a calculation, for example “3 raised to the power of 3”."
+    : "Math mode is off. Speak normally to write on the board.";
+}
+
+function calculateSpokenMath(text) {
+  const numberWords = {
+    zero: 0, oh: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9,
+    ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16,
+    seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20, thirty: 30, forty: 40, fifty: 50,
+    sixty: 60, seventy: 70, eighty: 80, ninety: 90, hundred: 100, thousand: 1000,
+  };
+  const normalized = text.toLowerCase()
+    .replace(/[?,]/g, " ")
+    .replace(/^(?:what is|what's|calculate|compute|solve|evaluate)\s+/, "")
+    .replace(/\s+(?:equals?(?:\s+to)?|equal\s+to)(?:\s+.*)?$/, "")
+    .replace(/^(?:add|sum)\s+(.+?)\s+and\s+(.+)$/, "$1 + $2")
+    .replace(/^subtract\s+(.+?)\s+from\s+(.+)$/, "$2 - $1")
+    .replace(/^multiply\s+(.+?)\s+by\s+(.+)$/, "$1 * $2")
+    .replace(/^divide\s+(.+?)\s+by\s+(.+)$/, "$1 / $2")
+    .replace(/\bsquare root of\b/g, "sqrt ")
+    .replace(/\b(?:raised|raise)\s+to\s+(?:the\s+)?power(?:\s+of)?\b/g, "^")
+    .replace(/\bto\s+(?:the\s+)?power(?:\s+of)?\b/g, "^")
+    .replace(/\b([\w.]+)\s+squared\b/g, "$1 ^ 2")
+    .replace(/\b([\w.]+)\s+cubed\b/g, "$1 ^ 3")
+    .replace(/\b(?:multiplied|multiply)\s+by\b|\btimes\b/g, "*")
+    .replace(/\b(?:divided|divide)\s+by\b/g, "/")
+    .replace(/\bplus\b|\badd\b/g, "+")
+    .replace(/\bminus\b|\bsubtract\b|\bnegative\b/g, "-")
+    .replace(/\b(?:modulo|mod)\b/g, "%")
+    .replace(/\bopen parenthesis\b/g, "(")
+    .replace(/\bclose parenthesis\b/g, ")")
+    .replace(/[×]/g, "*")
+    .replace(/[÷]/g, "/")
+    .replace(/[−–]/g, "-")
+    .trim();
+  const tokens = normalized.match(/\d+(?:\.\d+)?|[()+\-*/%^]|[a-z]+/g) || [];
+  if (!tokens.length || !/[+\-*/%^]/.test(tokens.join("")) && !tokens.includes("sqrt")) return null;
+
+  const parsedTokens = [];
+  for (let index = 0; index < tokens.length;) {
+    if (!(tokens[index] in numberWords)) {
+      parsedTokens.push(tokens[index]);
+      index += 1;
+      continue;
+    }
+    let total = 0;
+    let current = 0;
+    while (index < tokens.length && (tokens[index] in numberWords || tokens[index] === "and")) {
+      const word = tokens[index];
+      if (word === "and") {
+        index += 1;
+        continue;
+      }
+      const value = numberWords[word];
+      if (value === 100 || value === 1000) {
+        current = Math.max(current, 1) * value;
+        if (value === 1000) {
+          total += current;
+          current = 0;
+        }
+      } else {
+        current += value;
+      }
+      index += 1;
+    }
+    parsedTokens.push(String(total + current));
+  }
+
+  let position = 0;
+  function parsePrimary() {
+    const token = parsedTokens[position++];
+    if (token === "(") {
+      const value = parseExpression();
+      if (parsedTokens[position++] !== ")") throw new Error("Missing closing parenthesis");
+      return value;
+    }
+    if (/^\d+(?:\.\d+)?$/.test(token || "")) return Number(token);
+    throw new Error("Expected a number");
+  }
+  function parsePower() {
+    const value = parsePrimary();
+    if (parsedTokens[position] === "^") {
+      position += 1;
+      return value ** parseUnary();
+    }
+    return value;
+  }
+  function parseUnary() {
+    if (parsedTokens[position] === "+") {
+      position += 1;
+      return parseUnary();
+    }
+    if (parsedTokens[position] === "-") {
+      position += 1;
+      return -parseUnary();
+    }
+    if (parsedTokens[position] === "sqrt") {
+      position += 1;
+      return Math.sqrt(parseUnary());
+    }
+    return parsePower();
+  }
+  function parseTerm() {
+    let value = parseUnary();
+    while (["*", "/", "%"].includes(parsedTokens[position])) {
+      const operator = parsedTokens[position++];
+      const right = parseUnary();
+      if ((operator === "/" || operator === "%") && right === 0) throw new Error("Cannot divide by zero");
+      value = operator === "*" ? value * right : operator === "/" ? value / right : value % right;
+    }
+    return value;
+  }
+  function parseExpression() {
+    let value = parseTerm();
+    while (["+", "-"].includes(parsedTokens[position])) {
+      const operator = parsedTokens[position++];
+      const right = parseTerm();
+      value = operator === "+" ? value + right : value - right;
+    }
+    return value;
+  }
+
+  try {
+    const result = parseExpression();
+    if (position !== parsedTokens.length || !Number.isFinite(result)) return null;
+    const expression = parsedTokens.map((token) => ({ "*": "×", "/": "÷", "-": "−", sqrt: "√" })[token] || token).join(" ");
+    const roundedResult = Number(result.toPrecision(12));
+    return `${expression} = ${roundedResult}`;
+  } catch {
+    return null;
+  }
+}
+
 function eraseLastWord() {
   const board = document.querySelector("#writing-board");
   const trimmed = board.value.replace(/\s+$/, "");
@@ -456,9 +596,31 @@ function handleWritingCommand(text) {
     document.querySelector("#writing-status").textContent = writingLanguage === "hi" ? "पूरा बोर्ड साफ़ हो गया है।" : "The whole board is clear.";
   } else if (/^(erase|erase\s+(the\s+)?(last\s+)?word|delete\s+(the\s+)?last\s+word|मिटाओ|आख़िरी\s+शब्द\s+मिटाओ|आखिरी\s+शब्द\s+मिटाओ)[.!?।]*$/i.test(text)) {
     eraseLastWord();
+  } else if (mathMode) {
+    const calculation = calculateSpokenMath(text);
+    if (calculation) {
+      appendWriting(calculation);
+      document.querySelector("#writing-status").textContent = `Solved: ${calculation}`;
+    } else {
+      appendWriting(text);
+    }
   } else {
     appendWriting(text);
   }
+}
+
+function isMathModeCommand(text) {
+  const normalized = text.toLowerCase().trim().replace(/[.!?]+$/, "");
+  const mode = "maths?";
+  if (new RegExp(`^(?:(?:turn|switch)\\s+(?:on\\s+)?|enable\\s+|start\\s+)?(?:the\\s+)?${mode}\\s+mode\\s+(?:on|enable|start)$`).test(normalized)
+    || new RegExp(`^(?:turn|switch)\\s+(?:the\\s+)?${mode}\\s+mode\\s+on$`).test(normalized)
+    || new RegExp(`^(?:turn|switch)\\s+on\\s+(?:the\\s+)?${mode}\\s+mode$`).test(normalized)
+    || new RegExp(`^(?:enable|start)\\s+(?:the\\s+)?${mode}\\s+mode$`).test(normalized)) return true;
+  if (new RegExp(`^(?:(?:turn|switch)\\s+(?:off\\s+)?|disable\\s+|stop\\s+)?(?:the\\s+)?${mode}\\s+mode\\s+(?:off|disable|stop)$`).test(normalized)
+    || new RegExp(`^(?:turn|switch)\\s+(?:the\\s+)?${mode}\\s+mode\\s+off$`).test(normalized)
+    || new RegExp(`^(?:turn|switch)\\s+off\\s+(?:the\\s+)?${mode}\\s+mode$`).test(normalized)
+    || new RegExp(`^(?:disable|stop)\\s+(?:the\\s+)?${mode}\\s+mode$`).test(normalized)) return false;
+  return null;
 }
 
 function handleWritingScrollCommand(text) {
@@ -508,6 +670,11 @@ function handleVoiceCommand(rawText) {
     document.querySelector("#writing-status").textContent = language === "hi"
       ? "हिंदी मोड चालू है। अब हिंदी में बोलें।"
       : "English mode is on. You can speak in English.";
+    return;
+  }
+  const mathModeCommand = isMathModeCommand(text);
+  if (document.body.dataset.view === "writing" && mathModeCommand !== null) {
+    setMathMode(mathModeCommand);
     return;
   }
   if (document.body.dataset.view === "writing" && handleWritingScrollCommand(text)) return;
@@ -639,6 +806,7 @@ document.querySelector("#reset-view").addEventListener("click", () => {
   announce("The model view has been reset.");
 });
 document.querySelector("#erase-word").addEventListener("click", eraseLastWord);
+document.querySelector("#math-mode-toggle").addEventListener("click", () => setMathMode(!mathMode));
 document.querySelector("#clear-board").addEventListener("click", () => {
   document.querySelector("#writing-board").value = "";
   document.querySelector("#writing-status").textContent = writingLanguage === "hi" ? "पूरा बोर्ड साफ़ हो गया है।" : "The whole board is clear.";

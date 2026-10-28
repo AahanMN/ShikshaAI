@@ -157,6 +157,7 @@ select { padding: 0 10px; }
 .board-toolbar > div { display: flex; gap: 8px; }
 .board-toolbar button { padding: 8px 10px; border: 1px solid var(--line); color: var(--green); background: var(--paper-white); font-family: var(--display); font-size: 10px; font-weight: 700; cursor: pointer; }
 .board-toolbar button:hover { background: #e6ece1; }
+.board-toolbar button[aria-pressed="true"] { color: white; background: var(--green); }
 .language-switch { display: inline-flex; gap: 0 !important; border: 1px solid #bdcbbd; }
 .language-switch button { min-height: 31px; padding: 0 9px; border: 0; color: #65746a; background: transparent; }
 .language-switch button + button { border-left: 1px solid #bdcbbd; }
