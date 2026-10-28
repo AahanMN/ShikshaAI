@@ -35,7 +35,7 @@
         <div class="welcome-copy">
           <p class="eyebrow"><span class="eyebrow-line"></span> MADE FOR THE WAY YOU TEACH</p>
           <h1 id="welcome-title">Your voice<br>is the <em>lesson.</em></h1>
-          <p class="welcome-description">Bring ideas to life in 3D and write on a voice-controlled board.</p>
+          <p class="welcome-description">Explore 3D figures, write by voice, and discover a new AI Teaching studio for lesson planning.</p>
           <div class="welcome-actions">
             <button class="button button-primary" id="get-started" type="button">Enter the studio <span aria-hidden="true">→</span></button>
             <button class="button button-secondary" id="welcome-listen" type="button">Turn mic on <span class="mic-glyph" aria-hidden="true">◉</span></button>
@@ -63,13 +63,21 @@
         <div class="shape-list"><span>Cube</span><span>Sphere</span><span>Pyramid</span><span>And more</span></div>
         <p class="strip-aside">One spoken idea, ready to explore.</p>
       </div>
+      <aside class="studio-announcement" aria-labelledby="studio-announcement-title">
+        <div>
+          <p class="eyebrow"><span class="eyebrow-line"></span> NEW TEACHING SPACE</p>
+          <h2 id="studio-announcement-title">AI Teaching studio</h2>
+          <p>A dedicated space designed to turn a teaching idea into a structured lesson plan, with explanations, visuals, and questions.</p>
+        </div>
+        <button class="button button-primary" type="button" data-go="ai-teaching">Explore the new studio <span aria-hidden="true">→</span></button>
+      </aside>
     </section>
 
     <section class="view chooser-view" id="chooser-view" aria-labelledby="chooser-title" hidden>
       <div class="chooser-heading">
         <p class="eyebrow"><span class="eyebrow-line"></span> YOUR TEACHING SPACE</p>
         <h1 id="chooser-title">Choose how to <em>teach.</em></h1>
-        <p>Pick a space to begin. You can use your voice in either one.</p>
+        <p>Pick a space to begin. Use your voice in any of them.</p>
       </div>
       <div class="mode-grid">
         <button class="mode-card mode-card-3d" type="button" data-go="studio">
@@ -86,10 +94,17 @@
           <span class="mode-description">Dictate a lesson, scroll the board, and erase words by voice.</span>
           <span class="mode-action">Open writing space <b aria-hidden="true">↗</b></span>
         </button>
+        <button class="mode-card mode-card-ai" type="button" data-go="ai-teaching">
+          <span class="mode-number">03 / PLAN</span>
+          <span class="mode-icon mode-icon-ai" aria-hidden="true">AI</span>
+          <strong>AI Teaching studio</strong>
+          <span class="mode-description">Plan a classroom lesson with objectives, explanations, teaching visuals, and questions.</span>
+          <span class="mode-action">Explore AI Teaching studio <b aria-hidden="true">↗</b></span>
+        </button>
       </div>
       <div class="chooser-footer">
         <button class="back-button" type="button" data-go="welcome">← Back to welcome</button>
-        <p>Try saying “3D figures” or “writing space”.</p>
+        <p>Try saying “3D figures”, “writing space”, or “AI Teaching studio”.</p>
       </div>
     </section>
 
@@ -183,6 +198,43 @@
         </section>
       </div>
       <div class="studio-footer"><button class="back-button" type="button" data-go="chooser">← Choose another space</button><p>Say “turn math mode on” and speak a calculation, or say “turn math mode off” to dictate normally.</p></div>
+    </section>
+
+    <section class="view teaching-view" id="ai-teaching-view" aria-labelledby="ai-teaching-title" hidden>
+      <div class="studio-heading">
+        <div>
+          <p class="eyebrow"><span class="eyebrow-line"></span> NEW TEACHING SPACE</p>
+          <h1 id="ai-teaching-title">AI Teaching <em>studio.</em></h1>
+        </div>
+        <p class="studio-subtitle">A space for turning your teaching idea into a classroom-ready lesson.</p>
+      </div>
+
+      <section class="teaching-panel" aria-labelledby="teaching-panel-title">
+        <div class="teaching-panel-heading">
+          <span class="teaching-icon" aria-hidden="true">AI</span>
+          <div>
+            <p class="eyebrow">INTENT-TO-CLASSROOM</p>
+            <h2 id="teaching-panel-title">From your idea to a lesson plan</h2>
+          </div>
+        </div>
+        <p class="teaching-panel-intro">Describe what you want to teach. The AI will prepare objectives, explanation steps, visual suggestions, board notes, narration, and questions for you to review.</p>
+        <form id="lesson-form" class="lesson-form">
+          <label for="lesson-prompt">What would you like to teach?</label>
+          <textarea id="lesson-prompt" maxlength="4000" required placeholder="Example: Teach photosynthesis to Class 8 in Hindi, explain it step by step, suggest a diagram, and prepare five questions."></textarea>
+          <div class="lesson-submit-row">
+            <span>Up to 4,000 characters · Your request is sent to the configured AI provider.</span>
+            <button id="generate-lesson" class="button button-primary" type="submit">Generate lesson <span aria-hidden="true">→</span></button>
+          </div>
+          <p id="lesson-status" class="lesson-status" role="status" aria-live="polite">Ready when you are. Lesson generation requires the server's OpenAI API key.</p>
+        </form>
+        <section id="lesson-result" class="lesson-result" aria-label="Generated lesson" hidden></section>
+        <p class="teaching-reassurance">Your existing Writing space and 3D figures remain ready to use.</p>
+      </section>
+
+      <div class="studio-footer">
+        <button class="back-button" type="button" data-go="chooser">← Choose another space</button>
+        <p>Say “choose another space” to return to the menu.</p>
+      </div>
     </section>
   </main>
 
