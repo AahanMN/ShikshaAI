@@ -402,7 +402,8 @@ function isHomeCommand(text) {
 }
 
 function isChooserCommand(text) {
-  return /\b(choose another space|back to spaces|show teaching spaces)\b/i.test(text);
+  const normalized = text.toLowerCase().trim().replace(/[.!?]+$/, "");
+  return /^(?:(?:please\s+)?(?:go\s+)?back|(?:please\s+)?back\s+to\s+(?:teaching\s+)?spaces|(?:please\s+)?(?:go\s+)?back\s+to\s+(?:the\s+)?(?:main\s+)?menu|(?:please\s+)?(?:open|show|go\s+to|return\s+to)\s+(?:the\s+)?(?:main\s+)?menu|(?:main\s+)?menu|(?:please\s+)?(?:choose|select)\s+another\s+space|(?:please\s+)?(?:change|switch)\s+(?:teaching\s+)?spaces|(?:please\s+)?show\s+teaching\s+spaces|another\s+space)$/i.test(normalized);
 }
 
 function handleStudioViewCommand(text) {
