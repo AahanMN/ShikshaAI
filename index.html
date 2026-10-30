@@ -79,21 +79,21 @@
           <span class="mode-description">Create and explore shapes by speaking a command.</span>
           <span class="mode-action">Open 3D studio <b aria-hidden="true">↗</b></span>
         </button>
-        <button class="mode-card mode-card-hindi" type="button" data-go="writing" data-writing-mode="hindi">
+        <button class="mode-card mode-card-hindi" type="button" data-go="hindi">
           <span class="mode-number">02 / WRITE</span>
           <span class="mode-icon mode-icon-writing" aria-hidden="true">अ</span>
           <strong>Hindi Mode</strong>
           <span class="mode-description">Write on the classroom board in Hindi by voice or keyboard.</span>
           <span class="mode-action">Open Hindi board <b aria-hidden="true">↗</b></span>
         </button>
-        <button class="mode-card mode-card-math" type="button" data-go="writing" data-writing-mode="math">
+        <button class="mode-card mode-card-math" type="button" data-go="math">
           <span class="mode-number">03 / CALCULATE</span>
           <span class="mode-icon mode-icon-writing" aria-hidden="true">∑</span>
           <strong>Math Mode</strong>
           <span class="mode-description">Speak calculations and see them solved on the classroom board.</span>
           <span class="mode-action">Open math board <b aria-hidden="true">↗</b></span>
         </button>
-        <button class="mode-card mode-card-english" type="button" data-go="writing" data-writing-mode="english">
+        <button class="mode-card mode-card-english" type="button" data-go="english">
           <span class="mode-number">04 / WRITE</span>
           <span class="mode-icon mode-icon-writing" aria-hidden="true">Aa</span>
           <strong>English Mode</strong>
@@ -166,37 +166,88 @@
       <div class="studio-footer"><button class="back-button" type="button" data-go="chooser">← Choose another space</button><p>Say “draw a cube size 8”, “scroll up/down”, “zoom in/out”, or “go to writing space”.</p></div>
     </section>
 
-    <section class="view writing-view" id="writing-view" aria-labelledby="writing-title" hidden>
+    <section class="view writing-view" id="hindi-view" aria-labelledby="hindi-title" hidden>
       <div class="studio-heading writing-heading">
         <div>
           <p class="eyebrow"><span class="eyebrow-line"></span> YOUR TEACHING SPACE</p>
-          <h1 id="writing-title">Writing <em>space.</em></h1>
+          <h1 id="hindi-title">Hindi <em>Mode.</em></h1>
         </div>
-        <p class="studio-subtitle">Speak naturally. Your words appear on the board.</p>
+        <p class="studio-subtitle">हिंदी में बोलें। आपके शब्द कक्षा के बोर्ड पर दिखाई देंगे।</p>
       </div>
       <div class="writing-layout">
-        <section class="board-panel" aria-label="Voice-controlled writing board">
+        <section class="board-panel" aria-label="Hindi classroom board">
           <div class="board-toolbar">
-            <span><i class="status-light"></i> CLASSROOM BOARD</span>
+            <span><i class="status-light"></i> हिंदी कक्षा बोर्ड</span>
             <div>
-              <div class="language-switch" role="group" aria-label="Writing language">
-                <button type="button" data-writing-language="en" aria-pressed="true">English</button>
-                <button type="button" data-writing-language="hi" aria-pressed="false">हिन्दी</button>
-              </div>
-              <button id="math-mode-toggle" type="button" aria-pressed="false">Math mode: off</button>
-              <button id="erase-word" type="button">Erase last word</button>
-              <button id="clear-board" type="button">Erase whole board</button>
+              <button type="button" data-writing-action="erase-word">आख़िरी शब्द मिटाएँ</button>
+              <button type="button" data-writing-action="clear-board">पूरा बोर्ड मिटाएँ</button>
             </div>
           </div>
-          <label class="sr-only" for="writing-board">Writing board</label>
-          <textarea id="writing-board" placeholder="Your lesson will appear here…&#10;&#10;Try saying, “This is an apple.”"></textarea>
+          <label class="sr-only" for="hindi-board">हिंदी लेखन बोर्ड</label>
+          <textarea class="writing-board" id="hindi-board" lang="hi" placeholder="आपका पाठ यहाँ दिखाई देगा…&#10;&#10;बोलकर देखें, “यह एक सेब है।”"></textarea>
           <div class="board-footer">
-            <p id="writing-status" role="status" aria-live="polite">Ready to write. Turn on the mic and start speaking.</p>
-            <span id="writing-command-hint">Say “turn math mode on”, then speak a calculation · “scroll up/down” · “erase” · “erase whole”</span>
+            <p class="writing-status" role="status" aria-live="polite">लिखने के लिए तैयार। माइक चालू करें और बोलना शुरू करें।</p>
+            <span class="writing-command-hint">आवाज़ से कहें: “ऊपर स्क्रॉल करो” · “नीचे स्क्रॉल करो” · “मिटाओ”</span>
           </div>
         </section>
       </div>
-      <div class="studio-footer"><button class="back-button" type="button" data-go="chooser">← Choose another space</button><p>Say “turn math mode off” to switch to normal writing.</p></div>
+      <div class="studio-footer"><button class="back-button" type="button" data-go="chooser">← Choose another space</button><p>Say “English mode” or “math mode” to switch sections.</p></div>
+    </section>
+
+    <section class="view writing-view" id="math-view" aria-labelledby="math-title" hidden>
+      <div class="studio-heading writing-heading">
+        <div>
+          <p class="eyebrow"><span class="eyebrow-line"></span> YOUR TEACHING SPACE</p>
+          <h1 id="math-title">Math <em>Mode.</em></h1>
+        </div>
+        <p class="studio-subtitle">Speak a calculation and see the answer on your board.</p>
+      </div>
+      <div class="writing-layout">
+        <section class="board-panel" aria-label="Math classroom board">
+          <div class="board-toolbar">
+            <span><i class="status-light"></i> MATH BOARD</span>
+            <div>
+              <button type="button" data-writing-action="erase-word">Erase last word</button>
+              <button type="button" data-writing-action="clear-board">Erase whole board</button>
+            </div>
+          </div>
+          <label class="sr-only" for="math-board">Math board</label>
+          <textarea class="writing-board" id="math-board" lang="en" placeholder="Your calculations and answers will appear here…&#10;&#10;Try saying, “What is 12 times 8?”"></textarea>
+          <div class="board-footer">
+            <p class="writing-status" role="status" aria-live="polite">Math mode is on. Speak a calculation to get started.</p>
+            <span class="writing-command-hint">Say “calculate 12 times 8” · “scroll up/down” · “erase”</span>
+          </div>
+        </section>
+      </div>
+      <div class="studio-footer"><button class="back-button" type="button" data-go="chooser">← Choose another space</button><p>Say “Hindi mode” or “English mode” to switch sections.</p></div>
+    </section>
+
+    <section class="view writing-view" id="english-view" aria-labelledby="english-title" hidden>
+      <div class="studio-heading writing-heading">
+        <div>
+          <p class="eyebrow"><span class="eyebrow-line"></span> YOUR TEACHING SPACE</p>
+          <h1 id="english-title">English <em>Mode.</em></h1>
+        </div>
+        <p class="studio-subtitle">Speak naturally. Your English words appear on the board.</p>
+      </div>
+      <div class="writing-layout">
+        <section class="board-panel" aria-label="English classroom board">
+          <div class="board-toolbar">
+            <span><i class="status-light"></i> ENGLISH CLASSROOM BOARD</span>
+            <div>
+              <button type="button" data-writing-action="erase-word">Erase last word</button>
+              <button type="button" data-writing-action="clear-board">Erase whole board</button>
+            </div>
+          </div>
+          <label class="sr-only" for="english-board">English writing board</label>
+          <textarea class="writing-board" id="english-board" lang="en" placeholder="Your lesson will appear here…&#10;&#10;Try saying, “This is an apple.”"></textarea>
+          <div class="board-footer">
+            <p class="writing-status" role="status" aria-live="polite">Ready to write. Turn on the mic and start speaking.</p>
+            <span class="writing-command-hint">Say “scroll up/down” · “erase” · “erase whole”</span>
+          </div>
+        </section>
+      </div>
+      <div class="studio-footer"><button class="back-button" type="button" data-go="chooser">← Choose another space</button><p>Say “Hindi mode” or “math mode” to switch sections.</p></div>
     </section>
   </main>
 

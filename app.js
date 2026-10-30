@@ -6,7 +6,11 @@ const shapeCanvas = document.querySelector("#shape-canvas");
 const welcomeView = document.querySelector("#welcome-view");
 const chooserView = document.querySelector("#chooser-view");
 const studioView = document.querySelector("#studio-view");
-const writingView = document.querySelector("#writing-view");
+const writingViews = {
+  hindi: document.querySelector("#hindi-view"),
+  math: document.querySelector("#math-view"),
+  english: document.querySelector("#english-view"),
+};
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition;
 let voiceEnabled = false;
@@ -19,44 +23,18 @@ let activeSize = 5;
 function setWritingLanguage(language) {
   const languageChanged = writingLanguage !== language;
   writingLanguage = language;
-  const hindi = language === "hi";
-  const copy = hindi ? {
-    heading: "लिखने की जगह।",
-    subtitle: "स्वाभाविक रूप से बोलें। आपके शब्द बोर्ड पर दिखाई देंगे।",
-    board: "कक्षा का बोर्ड",
-    eraseWord: "आख़िरी शब्द मिटाएँ",
-    eraseWhole: "पूरा बोर्ड मिटाएँ",
-    placeholder: "आपका पाठ यहाँ दिखाई देगा…\n\nबोलकर देखें, “यह एक सेब है।”",
-    ready: "लिखने के लिए तैयार। माइक चालू करें और बोलना शुरू करें।",
-    commands: "आवाज़ से कहें: “ऊपर स्क्रॉल करो” · “नीचे स्क्रॉल करो” · “मिटाओ”",
-    voiceCommands: "बोलें: “maths mode on” · “ऊपर/नीचे स्क्रॉल करो” · “मिटाओ” · “पूरा बोर्ड मिटाओ”",
-  } : {
-    heading: "Writing space.",
-    subtitle: "Speak naturally. Your words appear on the board.",
-    board: "CLASSROOM BOARD",
-    eraseWord: "Erase last word",
-    eraseWhole: "Erase whole board",
-    placeholder: "Your lesson will appear here…\n\nTry saying, “This is an apple.”",
-    ready: "Ready to write. Turn on the mic and start speaking.",
-    commands: "VOICE: “SCROLL UP” · “SCROLL DOWN” · “ERASE” · “ERASE WHOLE”",
-    voiceCommands: "Say “turn math mode on” · “scroll up/down” · “erase” · “erase whole”",
-  };
-  document.documentElement.lang = hindi ? "hi" : "en";
-  document.querySelector("#writing-title").innerHTML = `${copy.heading.split(" ")[0]} <em>${copy.heading.split(" ").slice(1).join(" ")}</em>`;
-  document.querySelector(".writing-heading .studio-subtitle").textContent = copy.subtitle;
-  document.querySelector(".board-panel").setAttribute("aria-label", copy.board);
-  document.querySelector(".board-toolbar > span").lastChild.textContent = ` ${copy.board}`;
-  document.querySelector("#erase-word").textContent = copy.eraseWord;
-  document.querySelector("#clear-board").textContent = copy.eraseWhole;
-  document.querySelector("#writing-board").placeholder = copy.placeholder;
-  document.querySelector("#writing-board").lang = hindi ? "hi" : "en";
-  document.querySelector("#writing-status").textContent = copy.ready;
-  document.querySelector("#writing-command-hint").textContent = copy.commands;
-  document.querySelector(".board-footer > span").textContent = copy.voiceCommands;
-  document.querySelectorAll("[data-writing-language]").forEach((button) => {
-    button.setAttribute("aria-pressed", String(button.dataset.writingLanguage === language));
-  });
+  document.documentElement.lang = language;
+  const board = writingElement(".writing-board");
+  if (board) board.lang = language;
   if (languageChanged && voiceEnabled && recognitionActive) recognition.stop();
+}
+
+function activeWritingView() {
+  return writingViews[document.body.dataset.view] || null;
+}
+
+function writingElement(selector) {
+  return activeWritingView()?.querySelector(selector);
 }
 
 function announce(message, isError = false) {
@@ -65,15 +43,15 @@ function announce(message, isError = false) {
   target.classList.toggle("is-error", isError);
   document.querySelector("#welcome-status").textContent = message;
   document.querySelector("#welcome-status").classList.toggle("is-error", isError);
-  const writingStatus = document.querySelector("#writing-status");
-  if (document.body.dataset.view === "writing") {
+  const writingStatus = writingElement(".writing-status");
+  if (writingStatus) {
     writingStatus.textContent = message;
     writingStatus.classList.toggle("is-error", isError);
   }
 }
 
 function switchView(view, updateHistory = true) {
-  const views = { welcome: welcomeView, chooser: chooserView, studio: studioView, writing: writingView };
+  const views = { welcome: welcomeView, chooser: chooserView, studio: studioView, ...writingViews };
   if (!views[view]) view = "welcome";
   Object.entries(views).forEach(([name, element]) => {
     element.hidden = name !== view;
@@ -82,17 +60,19 @@ function switchView(view, updateHistory = true) {
   if (updateHistory) history.replaceState({ view }, "", view === "welcome" ? "#welcome" : `#${view}`);
   if (view === "studio") {
     window.setTimeout(() => document.querySelector("#command-input").focus(), 50);
-  } else if (view === "writing") {
-    window.setTimeout(() => document.querySelector("#writing-board").focus(), 50);
+  } else if (writingViews[view]) {
+    mathMode = view === "math";
+    setWritingLanguage(view === "hindi" ? "hi" : "en");
+    window.setTimeout(() => writingElement(".writing-board").focus(), 50);
   }
   if (voiceEnabled) {
     const prompt = {
       welcome: "Listening. Say “get started” to choose a teaching space.",
       chooser: "Listening. Say “3D figures”, “Hindi mode”, “math mode”, or “English mode”.",
       studio: "Listening. Say a shape and size.",
-      writing: mathMode
-        ? "Math mode is on. Say a calculation, or say “turn math mode off” to dictate."
-        : "Listening. Speak to write, or say “erase” or “erase whole”.",
+      hindi: "सुन रहा हूँ। हिंदी में बोलें, “मिटाओ” कहें या बोर्ड स्क्रॉल करने को कहें।",
+      math: "Math mode is on. Say a calculation, or say “choose another space” to return to the menu.",
+      english: "Listening. Speak to write, or say “erase” or “erase whole”.",
     };
     announce(prompt[view]);
   }
@@ -434,28 +414,15 @@ function handleStudioViewCommand(text) {
 }
 
 function appendWriting(text) {
-  const board = document.querySelector("#writing-board");
+  const board = writingElement(".writing-board");
   const addition = text.trim();
   if (!addition) return;
   const separator = board.value && !/\s$/.test(board.value) ? " " : "";
   board.value += `${separator}${addition}`;
   board.dispatchEvent(new Event("input", { bubbles: true }));
-  document.querySelector("#writing-status").textContent = writingLanguage === "hi"
+  writingElement(".writing-status").textContent = writingLanguage === "hi"
     ? `जोड़ा गया: “${addition}”`
     : `Added: “${addition}”`;
-}
-
-function setMathMode(enabled) {
-  mathMode = enabled;
-  const button = document.querySelector("#math-mode-toggle");
-  button.textContent = `Math mode: ${enabled ? "on" : "off"}`;
-  button.setAttribute("aria-pressed", String(enabled));
-  document.querySelector("#writing-title").innerHTML = enabled
-    ? "Math <em>mode.</em>"
-    : writingLanguage === "hi" ? "लिखने की <em>जगह।</em>" : "Writing <em>space.</em>";
-  document.querySelector("#writing-status").textContent = enabled
-    ? "Math mode is on. Speak a calculation, for example “3 raised to the power of 3”."
-    : "Math mode is off. Speak normally to write on the board.";
 }
 
 function calculateSpokenMath(text) {
@@ -588,25 +555,25 @@ function calculateSpokenMath(text) {
 }
 
 function eraseLastWord() {
-  const board = document.querySelector("#writing-board");
+  const board = writingElement(".writing-board");
   const trimmed = board.value.replace(/\s+$/, "");
   board.value = trimmed.replace(/\s*\S+$/, "");
-  document.querySelector("#writing-status").textContent = writingLanguage === "hi"
+  writingElement(".writing-status").textContent = writingLanguage === "hi"
     ? (trimmed === board.value ? "मिटाने के लिए कोई शब्द नहीं है।" : "आख़िरी शब्द मिटा दिया गया।")
     : (trimmed === board.value ? "There is nothing left to erase." : "Removed the last word.");
 }
 
 function handleWritingCommand(text) {
   if (/^(erase\s+(the\s+)?(whole|everything|all)(\s+board)?|पूरा\s+बोर्ड\s+(मिटाओ|साफ़?\s+करो)|सब\s+मिटाओ)[.!?।]*$/i.test(text)) {
-    document.querySelector("#writing-board").value = "";
-    document.querySelector("#writing-status").textContent = writingLanguage === "hi" ? "पूरा बोर्ड साफ़ हो गया है।" : "The whole board is clear.";
+    writingElement(".writing-board").value = "";
+    writingElement(".writing-status").textContent = writingLanguage === "hi" ? "पूरा बोर्ड साफ़ हो गया है।" : "The whole board is clear.";
   } else if (/^(erase|erase\s+(the\s+)?(last\s+)?word|delete\s+(the\s+)?last\s+word|मिटाओ|आख़िरी\s+शब्द\s+मिटाओ|आखिरी\s+शब्द\s+मिटाओ)[.!?।]*$/i.test(text)) {
     eraseLastWord();
   } else if (mathMode) {
     const calculation = calculateSpokenMath(text);
     if (calculation) {
       appendWriting(calculation);
-      document.querySelector("#writing-status").textContent = `Solved: ${calculation}`;
+      writingElement(".writing-status").textContent = `Solved: ${calculation}`;
     } else {
       appendWriting(text);
     }
@@ -637,7 +604,7 @@ function handleWritingScrollCommand(text) {
     || /(?:बोर्ड\s+)?नीचे\s+स्क्रॉल\s+(?:करो|करिए|करें|कर\s+दो)|बोर्ड\s+नीचे\s+(?:करो|करिए|करें)/.test(normalized);
   if (!scrollUp && !scrollDown) return false;
 
-  const board = document.querySelector("#writing-board");
+  const board = writingElement(".writing-board");
   const amount = Math.max(board.clientHeight * 0.75, 180);
   const maxScroll = board.scrollHeight - board.clientHeight;
   if (maxScroll > 1) {
@@ -646,7 +613,7 @@ function handleWritingScrollCommand(text) {
     window.scrollBy({ top: scrollUp ? -amount : amount, behavior: "smooth" });
   }
   board.focus({ preventScroll: true });
-  document.querySelector("#writing-status").textContent = writingLanguage === "hi"
+  writingElement(".writing-status").textContent = writingLanguage === "hi"
     ? (scrollUp ? "बोर्ड ऊपर स्क्रॉल किया।" : "बोर्ड नीचे स्क्रॉल किया।")
     : (scrollUp ? "Scrolled the board up." : "Scrolled the board down.");
   return true;
@@ -668,10 +635,10 @@ function isLanguageCommand(text) {
 
 function openWritingMode(mode) {
   const language = mode === "hindi" ? "hi" : "en";
+  mathMode = mode === "math";
   setWritingLanguage(language);
-  setMathMode(mode === "math");
-  switchView("writing");
-  document.querySelector("#writing-status").textContent = mode === "math"
+  switchView(mode);
+  writingElement(".writing-status").textContent = mode === "math"
     ? "Math mode is on. Speak a calculation, for example “3 raised to the power of 3”."
     : language === "hi"
       ? "हिंदी मोड चालू है। अब हिंदी में बोलें।"
@@ -688,20 +655,15 @@ function handleVoiceCommand(rawText) {
     return;
   }
   if (/^(?:please\s+)?maths?\s+mode[.!?]*$/i.test(text)) {
-    if (currentView === "writing") setMathMode(true);
-    else openWritingMode("math");
+    openWritingMode("math");
     return;
   }
   const mathModeCommand = isMathModeCommand(text);
-  if (mathModeCommand !== null && (currentView === "welcome" || currentView === "chooser")) {
+  if (mathModeCommand !== null) {
     openWritingMode(mathModeCommand ? "math" : "english");
     return;
   }
-  if (currentView === "writing" && mathModeCommand !== null) {
-    setMathMode(mathModeCommand);
-    return;
-  }
-  if (currentView === "writing" && handleWritingScrollCommand(text)) return;
+  if (writingViews[currentView] && handleWritingScrollCommand(text)) return;
   if (isHomeCommand(text)) {
     switchView("welcome");
     announce(`Heard “${text}”. Back at the welcome page.`);
@@ -729,7 +691,7 @@ function handleVoiceCommand(rawText) {
     return;
   }
   if (currentView === "studio" && handleStudioViewCommand(text)) return;
-  if (document.body.dataset.view === "writing") {
+  if (writingViews[document.body.dataset.view]) {
     handleWritingCommand(text);
     return;
   }
@@ -757,7 +719,7 @@ function startRecognition() {
   }
   if (recognitionActive) return;
   recognition = new SpeechRecognition();
-  recognition.lang = document.body.dataset.view === "writing" && writingLanguage === "hi" ? "hi-IN" : "en-IN";
+  recognition.lang = document.body.dataset.view === "hindi" ? "hi-IN" : "en-IN";
   recognition.continuous = true;
   recognition.interimResults = false;
   recognition.onstart = () => {
@@ -768,14 +730,11 @@ function startRecognition() {
       welcome: "Listening. Say “get started” to choose a teaching space.",
       chooser: "Listening. Say “3D figures”, “Hindi mode”, “math mode”, or “English mode”.",
       studio: "Listening. Say a shape and size, for example “draw a cube size 8”.",
-      writing: mathMode
-        ? "Math mode is on. Say a calculation, or say “turn math mode off” to dictate."
-        : "Listening. Speak to write, say “erase” or “erase whole”, or scroll the board.",
+      hindi: "सुन रहा हूँ। हिंदी में बोलें, “मिटाओ” कहें या बोर्ड स्क्रॉल करने को कहें।",
+      math: "Math mode is on. Say a calculation, or say “choose another space” to return to the menu.",
+      english: "Listening. Speak to write, say “erase” or “erase whole”, or scroll the board.",
     };
-    const hindiWritingPrompt = "मैं सुन रहा हूँ। हिंदी में बोलकर लिखें, “मिटाओ” कहें या बोर्ड स्क्रॉल करने को कहें।";
-    announce(document.body.dataset.view === "writing" && writingLanguage === "hi"
-      ? hindiWritingPrompt
-      : prompts[document.body.dataset.view]);
+    announce(prompts[document.body.dataset.view]);
   };
   recognition.onresult = (event) => {
     for (let index = event.resultIndex; index < event.results.length; index += 1) {
@@ -823,34 +782,30 @@ document.querySelector("#get-started").addEventListener("click", () => switchVie
 document.querySelectorAll("[data-go]").forEach((element) => {
   element.addEventListener("click", (event) => {
     event.preventDefault();
-    if (element.dataset.writingMode) openWritingMode(element.dataset.writingMode);
-    else switchView(element.dataset.go);
+    switchView(element.dataset.go);
   });
 });
 document.querySelector("#reset-view").addEventListener("click", () => {
   drawShape(activeShape, activeSize);
   announce("The model view has been reset.");
 });
-document.querySelector("#erase-word").addEventListener("click", eraseLastWord);
-document.querySelector("#math-mode-toggle").addEventListener("click", () => setMathMode(!mathMode));
-document.querySelector("#clear-board").addEventListener("click", () => {
-  document.querySelector("#writing-board").value = "";
-  document.querySelector("#writing-status").textContent = writingLanguage === "hi" ? "पूरा बोर्ड साफ़ हो गया है।" : "The whole board is clear.";
+document.querySelectorAll('[data-writing-action="erase-word"]').forEach((button) => {
+  button.addEventListener("click", eraseLastWord);
 });
-document.querySelectorAll("[data-writing-language]").forEach((button) => {
+document.querySelectorAll('[data-writing-action="clear-board"]').forEach((button) => {
   button.addEventListener("click", () => {
-    setMathMode(false);
-    setWritingLanguage(button.dataset.writingLanguage);
+    writingElement(".writing-board").value = "";
+    writingElement(".writing-status").textContent = writingLanguage === "hi" ? "पूरा बोर्ड साफ़ हो गया है।" : "The whole board is clear.";
   });
 });
 window.addEventListener("popstate", () => {
   const view = location.hash.slice(1);
-  switchView(["welcome", "chooser", "studio", "writing"].includes(view) ? view : "welcome", false);
+  switchView(["welcome", "chooser", "studio", "hindi", "math", "english"].includes(view) ? view : "welcome", false);
 });
 
 if (!SpeechRecognition) {
   document.querySelector("#welcome-status").textContent = "Voice input is not supported in this browser. Select Get started to continue with the controls.";
   document.querySelector("#voice-button").title = "Voice input is not supported by this browser";
 }
-if (["chooser", "studio", "writing"].includes(location.hash.slice(1))) switchView(location.hash.slice(1), false);
+if (["chooser", "studio", "hindi", "math", "english"].includes(location.hash.slice(1))) switchView(location.hash.slice(1), false);
 startWelcomeModel();
