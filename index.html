@@ -107,10 +107,17 @@
           <span class="mode-description">Explore 51 carefully illustrated science diagrams, from cells and anatomy to physics and chemistry.</span>
           <span class="mode-action">Explore diagrams <b aria-hidden="true">↗</b></span>
         </button>
+        <button class="mode-card mode-card-lessons" type="button" data-go="guided-lessons">
+          <span class="mode-number">06 / LEARN</span>
+          <span class="mode-icon mode-icon-writing" aria-hidden="true">↗</span>
+          <strong>Guided Lessons</strong>
+          <span class="mode-description">Choose a class, subject and CBSE/NCERT topic to start learning step by step.</span>
+          <span class="mode-action">Start a lesson <b aria-hidden="true">↗</b></span>
+        </button>
       </div>
       <div class="chooser-footer">
         <button class="back-button" type="button" data-go="welcome">← Back to welcome</button>
-        <p>Say “3D figures”, “Hindi mode”, “math mode”, “English mode”, or “science diagrams”.</p>
+        <p>Say “3D figures”, “Hindi mode”, “math mode”, “English mode”, “science diagrams”, or “guided lessons”.</p>
       </div>
     </section>
 
@@ -286,6 +293,56 @@
         </section>
       </div>
       <div class="studio-footer"><button class="back-button" type="button" data-go="chooser">← Choose another space</button><p>Say “choose another space” to return to the menu.</p></div>
+    </section>
+
+    <section class="view lessons-view" id="guided-lessons-view" aria-labelledby="lessons-title" hidden>
+      <div class="studio-heading lessons-heading">
+        <div>
+          <p class="eyebrow"><span class="eyebrow-line"></span> TEACH ONE IDEA AT A TIME</p>
+          <h1 id="lessons-title">Guided <em>lessons.</em></h1>
+        </div>
+        <p class="studio-subtitle">Choose Class 6–10, then browse CBSE/NCERT subjects and topics.</p>
+      </div>
+      <div class="lesson-workspace">
+        <aside class="lesson-library" aria-label="Class, subject and topic selection">
+          <label class="lesson-library-label" for="lesson-grade">1 · CHOOSE YOUR CLASS</label>
+          <select id="lesson-grade" class="lesson-select" aria-label="Choose class"></select>
+          <p class="lesson-library-label">2 · CHOOSE A SUBJECT</p>
+          <div id="lesson-subjects" class="lesson-list" aria-label="Subjects"></div>
+          <p class="lesson-library-label lesson-topics-label">3 · CHOOSE A TOPIC</p>
+          <div id="lesson-topics" class="lesson-topics" aria-label="Class topics"></div>
+          <p class="lesson-curriculum-note">CBSE/NCERT-aligned topic list. Your school's yearly syllabus may vary.</p>
+        </aside>
+        <section class="lesson-stage" aria-label="Lesson content">
+          <div class="lesson-stage-heading">
+            <div>
+              <p id="lesson-category" class="eyebrow">GRADES 5–8 · EARTH SCIENCE</p>
+              <h2 id="lesson-name">The water cycle</h2>
+            </div>
+            <button id="lesson-read-aloud" class="diagram-download" type="button">Read step aloud</button>
+          </div>
+          <p id="lesson-objective" class="lesson-objective"></p>
+          <div class="lesson-progress-row">
+            <span id="lesson-step-count">STEP 1 OF 4</span>
+            <progress id="lesson-progress" max="4" value="1" aria-label="Lesson progress"></progress>
+          </div>
+          <article class="lesson-card" aria-live="polite">
+            <h3 id="lesson-step-heading"></h3>
+            <p id="lesson-step-body"></p>
+          </article>
+          <section id="lesson-question" class="lesson-question" aria-labelledby="lesson-question-prompt" hidden>
+            <h3 id="lesson-question-prompt"></h3>
+            <div id="lesson-answers" class="lesson-answers"></div>
+            <p id="lesson-feedback" class="lesson-feedback" role="status" aria-live="polite"></p>
+          </section>
+          <div class="lesson-controls">
+            <button id="lesson-previous" class="back-button" type="button">← Previous</button>
+            <button id="lesson-next" class="button button-primary" type="button">Next step <span aria-hidden="true">→</span></button>
+          </div>
+          <p id="lesson-status" class="lesson-status" role="status" aria-live="polite">Choose a lesson, then move through it at your own pace.</p>
+        </section>
+      </div>
+      <div class="studio-footer"><button class="back-button" type="button" data-go="chooser">← Choose another space</button><p>Say “guided lessons”, a topic name, “next step”, “go back”, or “explain this”.</p></div>
     </section>
   </main>
 

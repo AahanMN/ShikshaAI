@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { initializeScienceDiagrams, selectScienceDiagram } from "./science-diagrams.js";
+import { handleGuidedLessonCommand, initializeGuidedLessons } from "./guided-lessons.js";
 
 const welcomeCanvas = document.querySelector("#welcome-canvas");
 const shapeCanvas = document.querySelector("#shape-canvas");
@@ -8,6 +9,7 @@ const welcomeView = document.querySelector("#welcome-view");
 const chooserView = document.querySelector("#chooser-view");
 const studioView = document.querySelector("#studio-view");
 const scienceDiagramsView = document.querySelector("#science-diagrams-view");
+const guidedLessonsView = document.querySelector("#guided-lessons-view");
 const writingViews = {
   hindi: document.querySelector("#hindi-view"),
   math: document.querySelector("#math-view"),
@@ -59,6 +61,7 @@ function switchView(view, updateHistory = true) {
     studio: studioView,
     ...writingViews,
     "science-diagrams": scienceDiagramsView,
+    "guided-lessons": guidedLessonsView,
   };
   if (!views[view]) view = "welcome";
   Object.entries(views).forEach(([name, element]) => {
@@ -76,12 +79,13 @@ function switchView(view, updateHistory = true) {
   if (voiceEnabled) {
     const prompt = {
       welcome: "Listening. Say “get started” to choose a teaching space.",
-      chooser: "Listening. Say “3D figures”, “Hindi mode”, “math mode”, or “English mode”.",
+      chooser: "Listening. Say “3D figures”, “Hindi mode”, “math mode”, “English mode”, “science diagrams”, or “guided lessons”.",
       studio: "Listening. Say a shape and size.",
       hindi: "सुन रहा हूँ। हिंदी में बोलें, “मिटाओ” कहें या बोर्ड स्क्रॉल करने को कहें।",
       math: "Math mode is on. Say a calculation, or say “choose another space” to return to the menu.",
       english: "Listening. Speak to write, or say “erase” or “erase whole”.",
       "science-diagrams": "Listening. Say a science diagram name or choose one from the list.",
+      "guided-lessons": "Listening. Say a class, subject, topic name, “next step”, or “explain this”.",
     };
     announce(prompt[view]);
   }
@@ -698,6 +702,14 @@ function handleVoiceCommand(rawText) {
     switchView("science-diagrams");
     return;
   }
+  if (/\bguided\s+lessons?\b|\blesson\s+mode\b/i.test(text)) {
+    switchView("guided-lessons");
+    return;
+  }
+  if (currentView === "guided-lessons") {
+    handleGuidedLessonCommand(text);
+    return;
+  }
   if (currentView === "science-diagrams") {
     if (!selectScienceDiagram(text)) {
       announce("Choose a diagram from the library or say its name.");
@@ -747,12 +759,13 @@ function startRecognition() {
     setListeningState(true);
     const prompts = {
       welcome: "Listening. Say “get started” to choose a teaching space.",
-      chooser: "Listening. Say “3D figures”, “Hindi mode”, “math mode”, or “English mode”.",
+      chooser: "Listening. Say “3D figures”, “Hindi mode”, “math mode”, “English mode”, “science diagrams”, or “guided lessons”.",
       studio: "Listening. Say a shape and size, for example “draw a cube size 8”.",
       hindi: "सुन रहा हूँ। हिंदी में बोलें, “मिटाओ” कहें या बोर्ड स्क्रॉल करने को कहें।",
       math: "Math mode is on. Say a calculation, or say “choose another space” to return to the menu.",
       english: "Listening. Speak to write, say “erase” or “erase whole”, or scroll the board.",
       "science-diagrams": "Listening. Say a science diagram name or choose one from the list.",
+      "guided-lessons": "Listening. Say a class, subject, topic name, “next step”, or “explain this”.",
     };
     announce(prompts[document.body.dataset.view]);
   };
@@ -820,13 +833,14 @@ document.querySelectorAll('[data-writing-action="clear-board"]').forEach((button
 });
 window.addEventListener("popstate", () => {
   const view = location.hash.slice(1);
-  switchView(["welcome", "chooser", "studio", "hindi", "math", "english", "science-diagrams"].includes(view) ? view : "welcome", false);
+  switchView(["welcome", "chooser", "studio", "hindi", "math", "english", "science-diagrams", "guided-lessons"].includes(view) ? view : "welcome", false);
 });
 
 if (!SpeechRecognition) {
   document.querySelector("#welcome-status").textContent = "Voice input is not supported in this browser. Select Get started to continue with the controls.";
   document.querySelector("#voice-button").title = "Voice input is not supported by this browser";
 }
-if (["chooser", "studio", "hindi", "math", "english", "science-diagrams"].includes(location.hash.slice(1))) switchView(location.hash.slice(1), false);
+if (["chooser", "studio", "hindi", "math", "english", "science-diagrams", "guided-lessons"].includes(location.hash.slice(1))) switchView(location.hash.slice(1), false);
 startWelcomeModel();
 initializeScienceDiagrams();
+initializeGuidedLessons();
