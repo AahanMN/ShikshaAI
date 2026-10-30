@@ -7,12 +7,6 @@ const welcomeView = document.querySelector("#welcome-view");
 const chooserView = document.querySelector("#chooser-view");
 const studioView = document.querySelector("#studio-view");
 const writingView = document.querySelector("#writing-view");
-const aiTeachingView = document.querySelector("#ai-teaching-view");
-const lessonForm = document.querySelector("#lesson-form");
-const lessonPrompt = document.querySelector("#lesson-prompt");
-const lessonStatus = document.querySelector("#lesson-status");
-const lessonResult = document.querySelector("#lesson-result");
-const generateLessonButton = document.querySelector("#generate-lesson");
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition;
 let voiceEnabled = false;
@@ -79,7 +73,7 @@ function announce(message, isError = false) {
 }
 
 function switchView(view, updateHistory = true) {
-  const views = { welcome: welcomeView, chooser: chooserView, studio: studioView, writing: writingView, "ai-teaching": aiTeachingView };
+  const views = { welcome: welcomeView, chooser: chooserView, studio: studioView, writing: writingView };
   if (!views[view]) view = "welcome";
   Object.entries(views).forEach(([name, element]) => {
     element.hidden = name !== view;
@@ -94,10 +88,11 @@ function switchView(view, updateHistory = true) {
   if (voiceEnabled) {
     const prompt = {
       welcome: "Listening. Say “get started” to choose a teaching space.",
-      chooser: "Listening. Say “3D figures”, “writing space”, or “AI Teaching studio”.",
+      chooser: "Listening. Say “3D figures”, “Hindi mode”, “math mode”, or “English mode”.",
       studio: "Listening. Say a shape and size.",
-      writing: "Listening. Speak to write, or say “erase” or “erase whole”.",
-      "ai-teaching": "Listening. Say “choose another space” to return to the menu.",
+      writing: mathMode
+        ? "Math mode is on. Say a calculation, or say “turn math mode off” to dictate."
+        : "Listening. Speak to write, or say “erase” or “erase whole”.",
     };
     announce(prompt[view]);
   }
@@ -400,11 +395,6 @@ form.addEventListener("submit", (event) => {
   submitShape();
 });
 
-lessonForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  void submitLesson();
-});
-
 function isStartCommand(text) {
   return /\b(start|begin|let'?s go|get started|open studio|start teaching)\b/i.test(text);
 }
@@ -416,10 +406,6 @@ function isHomeCommand(text) {
 function isChooserCommand(text) {
   const normalized = text.toLowerCase().trim().replace(/[.!?]+$/, "");
   return /^(?:(?:please\s+)?(?:go\s+)?back|(?:please\s+)?back\s+to\s+(?:teaching\s+)?spaces|(?:please\s+)?(?:go\s+)?back\s+to\s+(?:the\s+)?(?:main\s+)?menu|(?:please\s+)?(?:open|show|go\s+to|return\s+to)\s+(?:the\s+)?(?:main\s+)?menu|(?:main\s+)?menu|(?:please\s+)?(?:choose|select)\s+another\s+space|(?:please\s+)?(?:change|switch)\s+(?:teaching\s+)?spaces|(?:please\s+)?show\s+teaching\s+spaces|another\s+space)$/i.test(normalized);
-}
-
-function isTeachingStudioCommand(text) {
-  return /\b(?:ai\s+teaching\s+studio|ai\s+teaching|teaching\s+studio|lesson\s+planning\s+studio)\b/i.test(text);
 }
 
 function handleStudioViewCommand(text) {
@@ -464,6 +450,9 @@ function setMathMode(enabled) {
   const button = document.querySelector("#math-mode-toggle");
   button.textContent = `Math mode: ${enabled ? "on" : "off"}`;
   button.setAttribute("aria-pressed", String(enabled));
+  document.querySelector("#writing-title").innerHTML = enabled
+    ? "Math <em>mode.</em>"
+    : writingLanguage === "hi" ? "लिखने की <em>जगह।</em>" : "Writing <em>space.</em>";
   document.querySelector("#writing-status").textContent = enabled
     ? "Math mode is on. Speak a calculation, for example “3 raised to the power of 3”."
     : "Math mode is off. Speak normally to write on the board.";
@@ -677,172 +666,66 @@ function isLanguageCommand(text) {
   return null;
 }
 
-function isLessonResponse(lesson) {
-  const textFields = ["subject", "topic", "grade_level", "language", "narration"];
-  const listFields = [
-    "learning_objectives",
-    "explanation_steps",
-    "visual_suggestions",
-    "board_annotations",
-  ];
-  return Boolean(
-    lesson
-    && typeof lesson === "object"
-    && textFields.every((field) => typeof lesson[field] === "string")
-    && listFields.every((field) => Array.isArray(lesson[field]) && lesson[field].every((item) => typeof item === "string"))
-    && Array.isArray(lesson.questions)
-    && lesson.questions.every((item) => item
-      && typeof item.question === "string"
-      && typeof item.answer === "string"),
-  );
-}
-
-function appendLessonList(container, title, values, ordered = false) {
-  if (!values.length) return;
-  const section = document.createElement("section");
-  const heading = document.createElement("h3");
-  heading.textContent = title;
-  const list = document.createElement(ordered ? "ol" : "ul");
-  values.forEach((value) => {
-    const item = document.createElement("li");
-    item.textContent = value;
-    list.append(item);
-  });
-  section.append(heading, list);
-  container.append(section);
-}
-
-function renderLesson(lesson) {
-  lessonResult.replaceChildren();
-  const heading = document.createElement("h2");
-  heading.textContent = lesson.topic;
-  const metadata = document.createElement("p");
-  metadata.className = "lesson-meta";
-  metadata.textContent = `${lesson.subject} · ${lesson.grade_level} · ${lesson.language}`;
-  lessonResult.append(heading, metadata);
-  appendLessonList(lessonResult, "Learning objectives", lesson.learning_objectives);
-  appendLessonList(lessonResult, "Explanation steps", lesson.explanation_steps, true);
-  appendLessonList(lessonResult, "Visual suggestions", lesson.visual_suggestions);
-  appendLessonList(lessonResult, "Board annotations", lesson.board_annotations);
-
-  const narration = document.createElement("section");
-  const narrationHeading = document.createElement("h3");
-  narrationHeading.textContent = "Teacher narration";
-  const narrationText = document.createElement("p");
-  narrationText.textContent = lesson.narration;
-  narration.append(narrationHeading, narrationText);
-  lessonResult.append(narration);
-
-  const questions = document.createElement("section");
-  const questionsHeading = document.createElement("h3");
-  questionsHeading.textContent = "Questions and answers";
-  questions.append(questionsHeading);
-  lesson.questions.forEach(({ question, answer }) => {
-    const card = document.createElement("div");
-    card.className = "lesson-question";
-    const questionText = document.createElement("strong");
-    questionText.textContent = question;
-    const answerText = document.createElement("p");
-    answerText.textContent = answer;
-    card.append(questionText, answerText);
-    questions.append(card);
-  });
-  lessonResult.append(questions);
-  lessonResult.hidden = false;
-}
-
-async function submitLesson(prompt = lessonPrompt.value.trim()) {
-  if (!prompt) {
-    lessonStatus.textContent = "Enter a teaching request before generating a lesson.";
-    lessonStatus.classList.add("is-error");
-    return;
-  }
-  lessonPrompt.value = prompt;
-  lessonStatus.textContent = "Creating your lesson with the AI provider...";
-  lessonStatus.classList.remove("is-error");
-  lessonStatus.classList.add("is-loading");
-  lessonResult.hidden = true;
-  generateLessonButton.disabled = true;
-  try {
-    const response = await fetch("/api/lesson", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt }),
-    });
-    let payload;
-    try {
-      payload = await response.json();
-    } catch {
-      throw new Error("The lesson server returned an invalid response.");
-    }
-    if (!response.ok) {
-      throw new Error(payload && typeof payload.error === "string" ? payload.error : "Lesson generation failed.");
-    }
-    if (!isLessonResponse(payload.lesson)) {
-      throw new Error("The lesson server returned an invalid lesson structure.");
-    }
-    renderLesson(payload.lesson);
-    lessonStatus.textContent = "AI-generated lesson ready. Review it before teaching; no generated actions were executed.";
-  } catch (error) {
-    lessonStatus.textContent = error instanceof Error ? error.message : "Could not generate the lesson.";
-    lessonStatus.classList.add("is-error");
-  } finally {
-    lessonStatus.classList.remove("is-loading");
-    generateLessonButton.disabled = false;
-  }
+function openWritingMode(mode) {
+  const language = mode === "hindi" ? "hi" : "en";
+  setWritingLanguage(language);
+  setMathMode(mode === "math");
+  switchView("writing");
+  document.querySelector("#writing-status").textContent = mode === "math"
+    ? "Math mode is on. Speak a calculation, for example “3 raised to the power of 3”."
+    : language === "hi"
+      ? "हिंदी मोड चालू है। अब हिंदी में बोलें।"
+      : "English mode is on. You can speak in English.";
 }
 
 function handleVoiceCommand(rawText) {
   const text = rawText.trim();
   if (!text) return;
+  const currentView = document.body.dataset.view;
   const language = isLanguageCommand(text);
   if (language) {
-    setWritingLanguage(language);
-    if (document.body.dataset.view !== "writing") switchView("writing");
-    document.querySelector("#writing-status").textContent = language === "hi"
-      ? "हिंदी मोड चालू है। अब हिंदी में बोलें।"
-      : "English mode is on. You can speak in English.";
+    openWritingMode(language === "hi" ? "hindi" : "english");
+    return;
+  }
+  if (/^(?:please\s+)?maths?\s+mode[.!?]*$/i.test(text)) {
+    if (currentView === "writing") setMathMode(true);
+    else openWritingMode("math");
     return;
   }
   const mathModeCommand = isMathModeCommand(text);
-  if (document.body.dataset.view === "writing" && mathModeCommand !== null) {
+  if (mathModeCommand !== null && (currentView === "welcome" || currentView === "chooser")) {
+    openWritingMode(mathModeCommand ? "math" : "english");
+    return;
+  }
+  if (currentView === "writing" && mathModeCommand !== null) {
     setMathMode(mathModeCommand);
     return;
   }
-  if (document.body.dataset.view === "writing" && handleWritingScrollCommand(text)) return;
+  if (currentView === "writing" && handleWritingScrollCommand(text)) return;
   if (isHomeCommand(text)) {
     switchView("welcome");
     announce(`Heard “${text}”. Back at the welcome page.`);
-    return;
-  }
-  if (isTeachingStudioCommand(text)) {
-    switchView("ai-teaching");
     return;
   }
   if (isChooserCommand(text)) {
     switchView("chooser");
     return;
   }
-  const currentView = document.body.dataset.view;
   if (currentView === "welcome" && isStartCommand(text)) {
     switchView("chooser");
     return;
   }
   if (/\b(writing space|writing board|write space)\b/i.test(text)) {
-    switchView("writing");
+    openWritingMode("english");
     return;
   }
   if (/\b(3d figures|3d shapes|shape studio|figures)\b/i.test(text)) {
     switchView("studio");
     return;
   }
-  if (currentView === "ai-teaching") {
-    void submitLesson(text);
-    return;
-  }
   if (currentView === "welcome" || currentView === "chooser") {
     switchView("chooser");
-    announce("Choose 3D figures, writing space, or AI Teaching studio.");
+    announce("Choose 3D figures, Hindi, math, or English mode.");
     return;
   }
   if (currentView === "studio" && handleStudioViewCommand(text)) return;
@@ -883,10 +766,11 @@ function startRecognition() {
     setListeningState(true);
     const prompts = {
       welcome: "Listening. Say “get started” to choose a teaching space.",
-      chooser: "Listening. Say “3D figures”, “writing space”, or “AI Teaching studio”.",
+      chooser: "Listening. Say “3D figures”, “Hindi mode”, “math mode”, or “English mode”.",
       studio: "Listening. Say a shape and size, for example “draw a cube size 8”.",
-      writing: "Listening. Speak to write, say “erase” or “erase whole”, or scroll the board.",
-      "ai-teaching": "Listening. Say “choose another space” to return to the menu.",
+      writing: mathMode
+        ? "Math mode is on. Say a calculation, or say “turn math mode off” to dictate."
+        : "Listening. Speak to write, say “erase” or “erase whole”, or scroll the board.",
     };
     const hindiWritingPrompt = "मैं सुन रहा हूँ। हिंदी में बोलकर लिखें, “मिटाओ” कहें या बोर्ड स्क्रॉल करने को कहें।";
     announce(document.body.dataset.view === "writing" && writingLanguage === "hi"
@@ -939,7 +823,8 @@ document.querySelector("#get-started").addEventListener("click", () => switchVie
 document.querySelectorAll("[data-go]").forEach((element) => {
   element.addEventListener("click", (event) => {
     event.preventDefault();
-    switchView(element.dataset.go);
+    if (element.dataset.writingMode) openWritingMode(element.dataset.writingMode);
+    else switchView(element.dataset.go);
   });
 });
 document.querySelector("#reset-view").addEventListener("click", () => {
@@ -953,16 +838,19 @@ document.querySelector("#clear-board").addEventListener("click", () => {
   document.querySelector("#writing-status").textContent = writingLanguage === "hi" ? "पूरा बोर्ड साफ़ हो गया है।" : "The whole board is clear.";
 });
 document.querySelectorAll("[data-writing-language]").forEach((button) => {
-  button.addEventListener("click", () => setWritingLanguage(button.dataset.writingLanguage));
+  button.addEventListener("click", () => {
+    setMathMode(false);
+    setWritingLanguage(button.dataset.writingLanguage);
+  });
 });
 window.addEventListener("popstate", () => {
   const view = location.hash.slice(1);
-  switchView(["welcome", "chooser", "studio", "writing", "ai-teaching"].includes(view) ? view : "welcome", false);
+  switchView(["welcome", "chooser", "studio", "writing"].includes(view) ? view : "welcome", false);
 });
 
 if (!SpeechRecognition) {
   document.querySelector("#welcome-status").textContent = "Voice input is not supported in this browser. Select Get started to continue with the controls.";
   document.querySelector("#voice-button").title = "Voice input is not supported by this browser";
 }
-if (["chooser", "studio", "writing", "ai-teaching"].includes(location.hash.slice(1))) switchView(location.hash.slice(1), false);
+if (["chooser", "studio", "writing"].includes(location.hash.slice(1))) switchView(location.hash.slice(1), false);
 startWelcomeModel();
