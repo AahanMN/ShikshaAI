@@ -1,11 +1,13 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { initializeScienceDiagrams, selectScienceDiagram } from "./science-diagrams.js";
 
 const welcomeCanvas = document.querySelector("#welcome-canvas");
 const shapeCanvas = document.querySelector("#shape-canvas");
 const welcomeView = document.querySelector("#welcome-view");
 const chooserView = document.querySelector("#chooser-view");
 const studioView = document.querySelector("#studio-view");
+const scienceDiagramsView = document.querySelector("#science-diagrams-view");
 const writingViews = {
   hindi: document.querySelector("#hindi-view"),
   math: document.querySelector("#math-view"),
@@ -51,7 +53,13 @@ function announce(message, isError = false) {
 }
 
 function switchView(view, updateHistory = true) {
-  const views = { welcome: welcomeView, chooser: chooserView, studio: studioView, ...writingViews };
+  const views = {
+    welcome: welcomeView,
+    chooser: chooserView,
+    studio: studioView,
+    ...writingViews,
+    "science-diagrams": scienceDiagramsView,
+  };
   if (!views[view]) view = "welcome";
   Object.entries(views).forEach(([name, element]) => {
     element.hidden = name !== view;
@@ -73,6 +81,7 @@ function switchView(view, updateHistory = true) {
       hindi: "सुन रहा हूँ। हिंदी में बोलें, “मिटाओ” कहें या बोर्ड स्क्रॉल करने को कहें।",
       math: "Math mode is on. Say a calculation, or say “choose another space” to return to the menu.",
       english: "Listening. Speak to write, or say “erase” or “erase whole”.",
+      "science-diagrams": "Listening. Say a science diagram name or choose one from the list.",
     };
     announce(prompt[view]);
   }
@@ -685,6 +694,16 @@ function handleVoiceCommand(rawText) {
     switchView("studio");
     return;
   }
+  if (/\bscience\s+diagrams?\b/i.test(text)) {
+    switchView("science-diagrams");
+    return;
+  }
+  if (currentView === "science-diagrams") {
+    if (!selectScienceDiagram(text)) {
+      announce("Choose a diagram from the library or say its name.");
+    }
+    return;
+  }
   if (currentView === "welcome" || currentView === "chooser") {
     switchView("chooser");
     announce("Choose 3D figures, Hindi, math, or English mode.");
@@ -733,6 +752,7 @@ function startRecognition() {
       hindi: "सुन रहा हूँ। हिंदी में बोलें, “मिटाओ” कहें या बोर्ड स्क्रॉल करने को कहें।",
       math: "Math mode is on. Say a calculation, or say “choose another space” to return to the menu.",
       english: "Listening. Speak to write, say “erase” or “erase whole”, or scroll the board.",
+      "science-diagrams": "Listening. Say a science diagram name or choose one from the list.",
     };
     announce(prompts[document.body.dataset.view]);
   };
@@ -800,12 +820,13 @@ document.querySelectorAll('[data-writing-action="clear-board"]').forEach((button
 });
 window.addEventListener("popstate", () => {
   const view = location.hash.slice(1);
-  switchView(["welcome", "chooser", "studio", "hindi", "math", "english"].includes(view) ? view : "welcome", false);
+  switchView(["welcome", "chooser", "studio", "hindi", "math", "english", "science-diagrams"].includes(view) ? view : "welcome", false);
 });
 
 if (!SpeechRecognition) {
   document.querySelector("#welcome-status").textContent = "Voice input is not supported in this browser. Select Get started to continue with the controls.";
   document.querySelector("#voice-button").title = "Voice input is not supported by this browser";
 }
-if (["chooser", "studio", "hindi", "math", "english"].includes(location.hash.slice(1))) switchView(location.hash.slice(1), false);
+if (["chooser", "studio", "hindi", "math", "english", "science-diagrams"].includes(location.hash.slice(1))) switchView(location.hash.slice(1), false);
 startWelcomeModel();
+initializeScienceDiagrams();

@@ -100,10 +100,17 @@
           <span class="mode-description">Write on the classroom board in English by voice or keyboard.</span>
           <span class="mode-action">Open English board <b aria-hidden="true">↗</b></span>
         </button>
+        <button class="mode-card mode-card-science" type="button" data-go="science-diagrams">
+          <span class="mode-number">05 / VISUALIZE</span>
+          <span class="mode-icon mode-icon-science" aria-hidden="true">⚛</span>
+          <strong>Science Diagrams</strong>
+          <span class="mode-description">Explore 51 carefully illustrated science diagrams, from cells and anatomy to physics and chemistry.</span>
+          <span class="mode-action">Explore diagrams <b aria-hidden="true">↗</b></span>
+        </button>
       </div>
       <div class="chooser-footer">
         <button class="back-button" type="button" data-go="welcome">← Back to welcome</button>
-        <p>Say “3D figures”, “Hindi mode”, “math mode”, or “English mode”.</p>
+        <p>Say “3D figures”, “Hindi mode”, “math mode”, “English mode”, or “science diagrams”.</p>
       </div>
     </section>
 
@@ -248,6 +255,37 @@
         </section>
       </div>
       <div class="studio-footer"><button class="back-button" type="button" data-go="chooser">← Choose another space</button><p>Say “Hindi mode” or “math mode” to switch sections.</p></div>
+    </section>
+
+    <section class="view diagrams-view" id="science-diagrams-view" aria-labelledby="diagrams-title" hidden>
+      <div class="studio-heading diagrams-heading">
+        <div>
+          <p class="eyebrow"><span class="eyebrow-line"></span> BUILT-IN SCIENCE LIBRARY</p>
+          <h1 id="diagrams-title">Science <em>diagrams.</em></h1>
+        </div>
+        <p class="studio-subtitle">51 labeled science illustrations, drawn right here. No API required.</p>
+      </div>
+      <div class="diagram-workspace">
+        <aside class="diagram-library" aria-label="Science diagram library">
+          <label for="diagram-search">Find a diagram</label>
+          <input id="diagram-search" type="search" placeholder="Search science topics…" autocomplete="off">
+          <p id="diagram-count" class="diagram-count" role="status" aria-live="polite">51 diagrams · Common to advanced</p>
+          <div id="diagram-list" class="diagram-list"></div>
+        </aside>
+        <section class="diagram-stage" aria-label="Selected science diagram">
+          <div class="diagram-stage-heading">
+            <div>
+              <p id="diagram-category" class="eyebrow">COMMON</p>
+              <h2 id="diagram-name">Water cycle</h2>
+            </div>
+            <button id="download-diagram" class="diagram-download" type="button">Download SVG</button>
+          </div>
+          <p id="diagram-description" class="diagram-description">Water moves through evaporation, condensation, precipitation, and collection.</p>
+          <div id="diagram-canvas" class="diagram-canvas"></div>
+          <p class="diagram-note">Illustrations are simplified learning diagrams and are not to scale.</p>
+        </section>
+      </div>
+      <div class="studio-footer"><button class="back-button" type="button" data-go="chooser">← Choose another space</button><p>Say “choose another space” to return to the menu.</p></div>
     </section>
   </main>
 
